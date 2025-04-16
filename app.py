@@ -12,10 +12,11 @@ app = Flask(__name__)
 
 def fullpage_screenshot(driver, file_path):
     try:
-        original_size = driver.execute_script("return [document.body.scrollWidth, document.body.scrollHeight];")
-        driver.set_window_size(original_size[0], original_size[1])
+        # Use full height for the page (still controlled)
+        total_height = driver.execute_script("return document.body.scrollHeight")
+        driver.set_window_size(1280, min(total_height, 5000))  # cap height if needed
         time.sleep(1)
-        driver.find_element(By.TAG_NAME, "body").screenshot(file_path)
+        driver.save_screenshot(file_path)
     except Exception as e:
         print(f"⚠️ Failed to capture full page screenshot: {e}")
 
@@ -36,14 +37,12 @@ def capture_website(url):
     driver.get(url)
     time.sleep(3)
 
-    # Debug: Save homepage
     try:
-        driver.save_screenshot("homepage_debug.png")
+        driver.save_screenshot("homepage_debug.jpg")
         print("📸 Saved homepage screenshot.")
     except Exception as e:
         print("⚠️ Failed to save homepage screenshot:", e)
 
-    # Try standard nav menu first
     menu_items = driver.find_elements(By.CSS_SELECTOR, "header nav a")
     print("🔗 Menu links found:")
     links = []
@@ -62,15 +61,12 @@ def capture_website(url):
             if href and href.startswith(url) and href not in links:
                 links.append(href)
 
-    # Optional: Limit total links for safety
-    # links = links[:5]
-
     screenshot_paths = []
     for i, link in enumerate(links):
         try:
             driver.get(link)
             time.sleep(2)
-            path = os.path.join(output_dir, f"page_{i+1}.png")
+            path = os.path.join(output_dir, f"page_{i+1}.jpg")
             fullpage_screenshot(driver, path)
             screenshot_paths.append(path)
         except Exception as e:
@@ -81,7 +77,7 @@ def capture_website(url):
     if not screenshot_paths:
         raise Exception("No screenshots captured. Please verify the website layout or URL.")
 
-    print(f"🧾 Converting {len(screenshot_paths)} screenshots into PDF...")
+    print(f"🧾 Converting {len(screenshot_paths)} JPEGs into PDF...")
 
     output_pdf = f"{output_dir}.pdf"
     with open(output_pdf, "wb") as f:
@@ -90,7 +86,7 @@ def capture_website(url):
                 with open(img_path, "rb") as img_file:
                     f.write(img2pdf.convert(img_file))
             except Exception as e:
-                print(f"❌ Skipping image {img_path} due to error: {e}")
+                print(f"❌ Failed converting {img_path}: {e}")
 
     print("✅ PDF generation complete.")
     return output_pdf
