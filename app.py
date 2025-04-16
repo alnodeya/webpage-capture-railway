@@ -33,20 +33,19 @@ def capture_website(url):
     driver.get(url)
     time.sleep(3)
 
-    menu_items = driver.find_elements(By.CSS_SELECTOR, "header nav a")
-    # DEBUG: Save homepage screenshot for visibility
-driver.save_screenshot("homepage_debug.png")
-print("✔️ Saved homepage screenshot as homepage_debug.png")
+    # Try capturing the homepage visually
+    driver.save_screenshot("homepage_debug.png")
+    print("✔️ Saved homepage screenshot as homepage_debug.png")
 
-# DEBUG: Print all discovered nav links
-print("🔗 Menu links discovered:")
-for item in menu_items:
-    print(" -", item.get_attribute("href"))
+    menu_items = driver.find_elements(By.CSS_SELECTOR, "header nav a")
+    print("🔗 Menu links discovered:")
     links = []
     for item in menu_items:
-        link = item.get_attribute("href")
-        if link and link.startswith(url) and link not in links:
-            links.append(link)
+        href = item.get_attribute("href")
+        print(" -", href)
+        if href and href.startswith(url) and href not in links:
+            links.append(href)
+
 
     screenshot_paths = []
     for i, link in enumerate(links):
