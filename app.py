@@ -75,7 +75,12 @@ def capture_website(url):
 
     output_pdf = f"{output_dir}.pdf"
     with open(output_pdf, "wb") as f:
-        f.write(img2pdf.convert(screenshot_paths))
+    for img_path in screenshot_paths:
+        try:
+            with open(img_path, "rb") as img_file:
+                f.write(img2pdf.convert(img_file))
+        except Exception as e:
+            print(f"❌ Skipping image {img_path} due to error: {e}")
 
     return output_pdf
 
