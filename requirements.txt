@@ -1,0 +1,6 @@
+
+flask
+selenium
+webdriver-manager
+img2pdf
+gunicorn
