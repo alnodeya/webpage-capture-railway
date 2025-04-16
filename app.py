@@ -52,7 +52,11 @@ def capture_website(url):
 
     output_pdf = f"{output_dir}.pdf"
     with open(output_pdf, "wb") as f:
-        f.write(img2pdf.convert(screenshot_paths))
+        if not screenshot_paths:
+    raise Exception("No screenshots were captured. Unable to generate PDF.")
+
+with open(output_pdf, "wb") as f:
+    f.write(img2pdf.convert(screenshot_paths))
 
     return output_pdf
 
