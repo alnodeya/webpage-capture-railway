@@ -37,7 +37,7 @@ def capture_website(url):
     driver.save_screenshot("homepage_debug.png")
     print("✔️ Saved homepage screenshot as homepage_debug.png")
 
-    menu_items = driver.find_elements(By.CSS_SELECTOR, "header nav a")
+    menu_items = driver.find_elements(By.CSS_SELECTOR, "a[href^='http']")
     print("🔗 Menu links discovered:")
     links = []
     for item in menu_items:
