@@ -30,15 +30,20 @@ def capture_website(url):
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     driver.get(url)
     time.sleep(3)
 
-    # DEBUG: Save initial homepage screenshot
-    driver.save_screenshot("homepage_debug.png")
-    print("📸 Saved homepage screenshot for inspection.")
+    # Debug: Save homepage
+    try:
+        driver.save_screenshot("homepage_debug.png")
+        print("📸 Saved homepage screenshot.")
+    except Exception as e:
+        print("⚠️ Failed to save homepage screenshot:", e)
 
+    # Try standard nav menu first
     menu_items = driver.find_elements(By.CSS_SELECTOR, "header nav a")
     print("🔗 Menu links found:")
     links = []
@@ -57,6 +62,9 @@ def capture_website(url):
             if href and href.startswith(url) and href not in links:
                 links.append(href)
 
+    # Optional: Limit total links for safety
+    # links = links[:5]
+
     screenshot_paths = []
     for i, link in enumerate(links):
         try:
@@ -66,22 +74,25 @@ def capture_website(url):
             fullpage_screenshot(driver, path)
             screenshot_paths.append(path)
         except Exception as e:
-            print(f"❌ Failed to capture screenshot for {link}: {e}")
+            print(f"❌ Failed to capture {link}: {e}")
 
     driver.quit()
 
     if not screenshot_paths:
-        raise Exception("No screenshots captured. Please check if the website structure is compatible.")
+        raise Exception("No screenshots captured. Please verify the website layout or URL.")
+
+    print(f"🧾 Converting {len(screenshot_paths)} screenshots into PDF...")
 
     output_pdf = f"{output_dir}.pdf"
     with open(output_pdf, "wb") as f:
-    for img_path in screenshot_paths:
-        try:
-            with open(img_path, "rb") as img_file:
-                f.write(img2pdf.convert(img_file))
-        except Exception as e:
-            print(f"❌ Skipping image {img_path} due to error: {e}")
+        for img_path in screenshot_paths:
+            try:
+                with open(img_path, "rb") as img_file:
+                    f.write(img2pdf.convert(img_file))
+            except Exception as e:
+                print(f"❌ Skipping image {img_path} due to error: {e}")
 
+    print("✅ PDF generation complete.")
     return output_pdf
 
 @app.route("/", methods=["GET", "POST"])
@@ -89,7 +100,7 @@ def index():
     if request.method == "POST":
         url = request.form.get("website_url")
         if not url:
-            return render_template("index.html", error="❗ Please enter a valid website URL.")
+            return render_template("index.html", error="❗ Please enter a website URL.")
         try:
             pdf_path = capture_website(url)
             return send_file(pdf_path, as_attachment=True)
